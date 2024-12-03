@@ -1,0 +1,134 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"math"
+	"os"
+	"regexp"
+	"strconv"
+)
+
+func main() {
+	file, err := os.Open("data.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	safetotal := 0
+
+	for scanner.Scan() {
+		reg := regexp.MustCompile("\\s+")
+		input := reg.Split(scanner.Text(), -1)
+		nums := make([]int, len(input))
+		diffs := make([]int, len(input))
+
+		safe := true
+		// data setup
+		dampenerSlot := -1
+		diffs[0] = 0
+		for i, v := range input {
+			nums[i], _ = strconv.Atoi(v)
+			if i > 0 {
+				diffs[i] = nums[i-1] - nums[i]
+			}
+		}
+
+		for i, v := range diffs {
+			if i > 0 {
+				if math.Abs(float64(v)) < 1 || math.Abs(float64(v)) > 3 {
+					if dampenerSlot == -1 {
+						dampenerSlot = i
+					} else {
+						safe = false
+					}
+				}
+			}
+		}
+		if dampenerSlot != -1 {
+			diffs = make([]int, len(input))
+			diffs[0] = 0
+			diffs[dampenerSlot] = 1
+			for i, _ := range nums {
+				if i > 0 {
+					if i != dampenerSlot {
+						if i == dampenerSlot+1 {
+							diffs[i] = nums[i-2] - nums[i]
+						} else {
+							diffs[i] = nums[i-1] - nums[i]
+						}
+					}
+				}
+			}
+
+			for i, v := range diffs {
+				if i > 0 && i != dampenerSlot {
+					if math.Abs(float64(v)) < 1 || math.Abs(float64(v)) > 3 {
+						safe = false
+					}
+				}
+			}
+		}
+
+		//
+		pos := 0
+		neg := 0
+		for _, v := range diffs {
+			if v > 0 {
+				pos++
+			} else if v < 0 {
+				neg++
+			}
+		}
+		isAccending := pos < neg
+
+		if isAccending {
+			if pos > 1 {
+				for i, v := range diffs {
+					if v > -1 {
+						dampenerSlot = i
+					}
+				}
+			} else if pos > 2 {
+				safe = false
+				goto NOTSAFE
+			}
+		}
+		if !isAccending && neg > 1 {
+			if neg > 1 {
+				for i, v := range diffs {
+					if v > -1 {
+					} else {
+						dampenerSlot = i
+					}
+				}
+			} else if neg > 2 {
+				safe = false
+				goto NOTSAFE
+			}
+		}
+		if safe {
+			safetotal++
+
+		}
+
+	NOTSAFE:
+		fmt.Println(dampenerSlot)
+		fmt.Println(nums)
+		fmt.Println(diffs)
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(safetotal)
+}
+
+func AbsInt(i1 int, i2 int) int {
+	if i1 > i2 {
+		return i1 - i2
+	}
+	return i2 - i1
+}

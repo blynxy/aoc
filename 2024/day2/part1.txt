@@ -1,0 +1,121 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"regexp"
+	"sort"
+	"strconv"
+)
+
+func main() {
+	file, err := os.Open("data.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	safeCount := 0
+
+	for scanner.Scan() {
+		reg := regexp.MustCompile("\\s+")
+		input := reg.Split(scanner.Text(), -1)
+		nums := make([]int, len(input))
+		for i, v := range input {
+			nums[i], _ = strconv.Atoi(v)
+		}
+		var safe bool = true
+		var dampenerUsed = false
+	DAMPEN:
+		var last int
+		var isIncrease bool
+
+		if !dampenerUsed && (len(nums) > 4 && (((nums[0]-nums[1] > 0) && (nums[1]-nums[2] < 0) && (nums[2]-nums[3] < 0)) || ((nums[0]-nums[1] < 0) && (nums[1]-nums[2] > 0) && (nums[2]-nums[3] > 0)))) {
+			if dampenerUsed {
+				safe = false
+				goto FAILURE
+			} else {
+				nums = append(nums[:0], nums[0:]...)
+				dampenerUsed = true
+				goto DAMPEN
+			}
+		}
+		for i, v := range nums {
+			if i > 0 {
+				if i == 1 {
+					// case if first is same number as second
+					if last == v {
+						if dampenerUsed {
+							safe = false
+							goto FAILURE
+						} else {
+							nums = append(nums[:i], nums[i+1:]...)
+							dampenerUsed = true
+							goto DAMPEN
+						}
+					}
+					isIncrease = last < v
+				}
+				if i > 1 {
+					if isIncrease != (last < v) {
+						if dampenerUsed {
+							safe = false
+							goto FAILURE
+						} else {
+							nums = append(nums[:i], nums[i+1:]...)
+							dampenerUsed = true
+							goto DAMPEN
+						}
+					}
+				}
+				if AbsInt(last, v) > 3 || AbsInt(last, v) < 1 {
+					if dampenerUsed {
+						safe = false
+						goto FAILURE
+					} else {
+						nums = append(nums[:i], nums[i+1:]...)
+						dampenerUsed = true
+						goto DAMPEN
+					}
+				}
+			}
+			last = v
+		}
+		if safe {
+			safeCount++
+		}
+	FAILURE:
+		if dampenerUsed {
+			fmt.Println(safe, "DAMPENED! ", nums, " | OLD:", input)
+		} else {
+			fmt.Println(safe, nums)
+
+		}
+	}
+	// for i, v := range list1 {
+
+	// 	fmt.Printf("%d : %d \n", list1[i], list2[v])
+
+	// }
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(safeCount)
+}
+func Insert(ss []int, s int) []int {
+	i := sort.SearchInts(ss, s)
+	ss = append(ss, 0)
+	copy(ss[i+1:], ss[i:])
+	ss[i] = s
+	return ss
+}
+
+func AbsInt(i1 int, i2 int) int {
+	if i1 > i2 {
+		return i1 - i2
+	}
+	return i2 - i1
+}

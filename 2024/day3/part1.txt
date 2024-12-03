@@ -1,0 +1,33 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+)
+
+func main() {
+	file, err := os.ReadFile("data.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var commands []string
+
+	reg := regexp.MustCompile(`(^|do\(\))((?:(?!don't\(\)).)*)(mul\(\d+,\d+\))`)
+	input := reg.FindAllString(string(file), -1)
+	total := 0
+	for i, v := range input {
+		commands = append(commands, v)
+
+		reg = regexp.MustCompile(`\d+`)
+		nums := reg.FindAllString(v, -1)
+		n1, _ := strconv.Atoi(nums[0])
+		n2, _ := strconv.Atoi(nums[1])
+		mul := n1 * n2
+		total += mul
+		fmt.Println(i, v, nums, mul)
+	}
+	fmt.Println(total)
+}
