@@ -10,10 +10,11 @@ import (
 )
 
 func main() {
-	file, err := os.ReadFile("data.txt")
+	file, err := os.Open("data.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer 
 
 	var commands []string
 
@@ -38,7 +39,7 @@ func main() {
 		}
 		if len(cs) > len(donot){
 			if cs[:len(donot)] == donot {
-				if 
+				
 			}
 		}
 
